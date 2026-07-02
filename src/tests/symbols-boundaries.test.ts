@@ -109,6 +109,9 @@ describe("degrees boundary tolerance", () => {
     [`20C-x`, `20C-x`],
     // `C` before a hyphen-digit is still a temperature (not a compound word).
     [`20C-5`, `20 ${DEGREE}C-5`],
+    // A boundary before the digit shadows the letter-prefix guard, mirroring
+    // the multiplication chain guard.
+    [`W${S}3C`, `W${S}3 ${DEGREE}C`],
   ])("converts %j to %j", (input, expected) => {
     expect(viewTransform(degrees, input)).toBe(expected)
   })

@@ -341,12 +341,15 @@ function multiplicationOverView(view: ProseView): void {
   view.commit()
 
   // Trailing multiplier: 5x (followed by a word boundary). The rule is
-  // `(?<!\d[eE])(?<![A-Za-z…\d])\d+ [xX*] \b(?!\w)` with one tolerated boundary
+  // `(?<!\d[eE])(?<![A-Za-z…\d])\d+ [x*] \b(?!\w)` with one tolerated boundary
   // before the operator. The leading guard, the slot before the operator, the
   // hex skip, and the trailing word boundary each consult boundaries at their
   // position. `*` never trails because it is not a word character, so the
-  // closing `\b` cannot anchor on it.
-  const trailingPattern = cachedRegExp(`(?<num>\\d+)(?<op>[xX*])`, "y")
+  // closing `\b` cannot anchor on it. Unlike the chain rule (where digits on
+  // both sides disambiguate), a trailing uppercase X is excluded: `5900X`,
+  // `10900X`-style model/SKU suffixes use uppercase, while prose multipliers
+  // ("2x speed", "10x faster") are conventionally lowercase.
+  const trailingPattern = cachedRegExp(`(?<num>\\d+)(?<op>[x*])`, "y")
   const trailingText = view.text
   let trailingScan = 0
   while (trailingScan < trailingText.length) {
@@ -657,6 +660,7 @@ function degreesOverView(view: ProseView): void {
   const text = view.text
   replaceAllInView(view, pattern, (match, v) => {
     const unitEnd = match.index + match[0].length
+    if (!degreeDigitPrefixOk(text, v, match.index)) return null
     if (!degreeUnitFollowOk(text, v, unitEnd)) return null
     const { unit } = match.groups!
     // Replace everything after the leading digit (the optional space and the
@@ -668,6 +672,19 @@ function degreesOverView(view: ProseView): void {
     allowBoundaries: (match, v) => digitSuffixBoundaryOk(match, v),
   })
   view.commit()
+}
+
+/**
+ * The `(?<![A-Za-z…%])` guard before the matched digit: a Latin letter
+ * attached to the digit means the "temperature" is the tail of an identifier
+ * ("W3C", "MP3F"), and a `%` means a percent-encoded octet in URL-like text
+ * ("%2C", "%2F"). A node boundary directly before the digit shadows the clean
+ * character, satisfying the guard (mirroring the multiplication chain guard).
+ */
+function degreeDigitPrefixOk(text: string, view: ProseView, digitIndex: number): boolean {
+  if (digitIndex === 0 || view.hasBoundary(digitIndex)) return true
+  const prior = text[digitIndex - 1]
+  return !(LATIN_LETTER_RE.test(prior) || prior === "%")
 }
 
 /**

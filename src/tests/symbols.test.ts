@@ -85,6 +85,12 @@ describe("multiplication", () => {
     ["5xword", "5xword"],
     ["10xbox", "10xbox"],
     ["2xLarge", "2xLarge"],
+    // Uppercase X after digits at a word boundary is a model/SKU suffix
+    // (Ryzen 5900X, i9-10900X), not a trailing multiplier.
+    ["a Ryzen 9 5900X processor.", "a Ryzen 9 5900X processor."],
+    ["2X speed", "2X speed"],
+    // Digit chains still accept uppercase X: digits on both sides disambiguate.
+    ["1920X1080", `1920${UNICODE_SYMBOLS.MULTIPLICATION}1080`],
     // Dimensions with prime marks already attached (post primeMarks pass)
     [`10′ x 12′`, `10′ ${UNICODE_SYMBOLS.MULTIPLICATION} 12′`],
     [`Room is 10′ x 12′`, `Room is 10′ ${UNICODE_SYMBOLS.MULTIPLICATION} 12′`],
@@ -292,6 +298,12 @@ describe("degrees", () => {
     ["100C,", `100 ${UNICODE_SYMBOLS.DEGREE}C,`],
     ["20 km", "20 km"],
     ["Section C", "Section C"],
+    // A letter attached before the digit marks an identifier, not a
+    // temperature.
+    ["W3C standards", "W3C standards"],
+    // `%` before the digit marks a percent-encoded octet in URL-like text.
+    ["In%202020%2C%20the", "In%202020%2C%20the"],
+    ["https://x.test/a%2Fb", "https://x.test/a%2Fb"],
     ["100 C", `100 ${UNICODE_SYMBOLS.DEGREE}C`],
     ["212F", `212 ${UNICODE_SYMBOLS.DEGREE}F`],
     ["-40 C", `-40 ${UNICODE_SYMBOLS.DEGREE}C`],
