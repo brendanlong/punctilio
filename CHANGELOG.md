@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed
+
+- The quoted-punctuation opener rule (`"?"`) no longer re-opens a closing quote that sits in opener context. A quote whose content ends in a hyphen or space (e.g. `"un-" or "non-"`, `"New ",`) used to flip its closer into an opening quote whenever another straight quote followed in the same block; the rule now skips candidates whose nearest preceding double quote is an unmatched opener, so the closer pairs with it instead.
+- The trailing multiplier rule no longer converts an uppercase `X` after digits (`Ryzen 9 5900X` stays untouched). Model/SKU suffixes use uppercase while prose multipliers ("2x speed", "10x faster") are conventionally lowercase; digit chains (`1920X1080`) still accept either case.
+- `degrees()` no longer false-positives on identifiers or percent-encoded URL text: a Latin letter or `%` attached before the digit (`W3C`, `In%202020%2C%20the`) now blocks the match, mirroring the compound guards on the unit side.
+
 ## [5.0.10] - 2026-06-27
 
 ### Changed
