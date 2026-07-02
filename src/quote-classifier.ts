@@ -718,9 +718,27 @@ function quotedPunctuationPrefixOk(items: Item[], index: number): boolean {
 }
 
 /**
+ * True iff the nearest double-quote item before `index` is an opening double
+ * quote with no straight quote between it and `index`: the candidate at
+ * `index` is that opener's pending closer, so it must not open a new span.
+ */
+function pendingDoubleOpenerBefore(items: Item[], index: number): boolean {
+  for (let j = index - 1; j >= 0; j--) {
+    const item = items[j]
+    if (item.boundary) continue
+    if (item.ch === LEFT_DOUBLE_QUOTE) return true
+    if (item.ch === '"' || item.ch === RIGHT_DOUBLE_QUOTE) return false
+  }
+  return false
+}
+
+/**
  * Quoted-punctuation openers like `"?"`: an opener-prefixed straight double
  * quote with a closing straight double quote anywhere ahead (at least one
  * item between them). Decisions use the pass-start set of straight quotes.
+ * A candidate whose nearest preceding double quote is an unmatched opener
+ * (e.g. the second quote of `"un-" or "non-"`) closes that opener instead,
+ * so it never starts a quoted-punctuation span.
  */
 function classifyQuotedPunctuationOpeners(items: Item[]): void {
   const straightIndices: number[] = []
@@ -730,6 +748,7 @@ function classifyQuotedPunctuationOpeners(items: Item[]): void {
   for (let k = 0; k < straightIndices.length; k++) {
     const i = straightIndices[k]
     if (!quotedPunctuationPrefixOk(items, i)) continue
+    if (pendingDoubleOpenerBefore(items, i)) continue
     const closer = straightIndices[k + 1]
     if (closer !== undefined && closer >= i + 2) {
       items[i].ch = LEFT_DOUBLE_QUOTE

@@ -147,6 +147,10 @@ describe("boundary-sensitive edges (ports of v4 sentinel behavior)", () => {
     [`say ${SEP}"?" x`, `say ${SEP}${LEFT_DOUBLE_QUOTE}?${RIGHT_DOUBLE_QUOTE} x`],
     [`(${SEP}"?" x)`, `(${SEP}${LEFT_DOUBLE_QUOTE}?${RIGHT_DOUBLE_QUOTE} x)`],
     [`${SEP}"?" x`, `${SEP}${LEFT_DOUBLE_QUOTE}?${RIGHT_DOUBLE_QUOTE} x`],
+    // The pending-opener guard reads through boundaries: the closer after
+    // "un<sep>-" pairs with its opener instead of re-opening a new span, even
+    // though a hyphen precedes it and another quote pair follows.
+    [`"un${SEP}-" or "non-" x`, `${LEFT_DOUBLE_QUOTE}un${SEP}-${RIGHT_DOUBLE_QUOTE} or ${LEFT_DOUBLE_QUOTE}non-${RIGHT_DOUBLE_QUOTE} x`],
     // 'n' lookahead without the trailing space is not the abbreviation.
     ["the 'n'y test b' c", `the ${LEFT_SINGLE_QUOTE}n${RIGHT_SINGLE_QUOTE}y test b${RIGHT_SINGLE_QUOTE} c`],
     // Brace quirk with no space.

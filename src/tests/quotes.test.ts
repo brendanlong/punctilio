@@ -70,7 +70,36 @@ describe("niceQuotes", () => {
       ['why not "?"', `why not ${LEFT_DOUBLE_QUOTE}?${RIGHT_DOUBLE_QUOTE}`],
       ['She asked "?" and left.', `She asked ${LEFT_DOUBLE_QUOTE}?${RIGHT_DOUBLE_QUOTE} and left.`],
       ['("?")', `(${LEFT_DOUBLE_QUOTE}?${RIGHT_DOUBLE_QUOTE})`],
+      // A straight quote between the pending opener and the candidate closes
+      // that opener, so the candidate still starts a quoted-punctuation span.
+      ['say "hi" "?" x', `say ${LEFT_DOUBLE_QUOTE}hi${RIGHT_DOUBLE_QUOTE} ${LEFT_DOUBLE_QUOTE}?${RIGHT_DOUBLE_QUOTE} x`],
+      // A closed pair before the candidate leaves no opener pending.
+      [`${LEFT_DOUBLE_QUOTE}done${RIGHT_DOUBLE_QUOTE} and "?" x`, `${LEFT_DOUBLE_QUOTE}done${RIGHT_DOUBLE_QUOTE} and ${LEFT_DOUBLE_QUOTE}?${RIGHT_DOUBLE_QUOTE} x`],
     ])('handles quoted punctuation: "%s"', (input, expected) => {
+      expect(classifyApostrophes(input)).toBe(expected)
+    })
+  })
+
+  describe("closers in opener-context positions (pending-opener guard)", () => {
+    // The quoted-punctuation rule must not re-open a quote that closes a
+    // pending opener, even when the closer sits in opener context (after a
+    // hyphen or a space) and more quotes follow in the same block.
+    it.each([
+      [
+        'splitting an "un-" or "non-" prefix into a separate token',
+        `splitting an ${LEFT_DOUBLE_QUOTE}un-${RIGHT_DOUBLE_QUOTE} or ${LEFT_DOUBLE_QUOTE}non-${RIGHT_DOUBLE_QUOTE} prefix into a separate token`,
+      ],
+      [
+        'tokens starting with "un-" and "non-", or cases',
+        `tokens starting with ${LEFT_DOUBLE_QUOTE}un-${RIGHT_DOUBLE_QUOTE} and ${LEFT_DOUBLE_QUOTE}non-${RIGHT_DOUBLE_QUOTE}, or cases`,
+      ],
+      // A closer preceded by a space stays straight (ambiguous by design)
+      // instead of flipping into an opener.
+      [
+        'the increment for "New ", the model sees "York" first',
+        `the increment for ${LEFT_DOUBLE_QUOTE}New ", the model sees ${LEFT_DOUBLE_QUOTE}York${RIGHT_DOUBLE_QUOTE} first`,
+      ],
+    ])('does not re-open a pending closer: "%s"', (input, expected) => {
       expect(classifyApostrophes(input)).toBe(expected)
     })
   })
